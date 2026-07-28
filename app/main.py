@@ -17,6 +17,7 @@ from app.scrapers.metadata import scrape_metadata
 from app.scrapers.subtitles import scrape_subtitles
 from app.scrapers.channel import scrape_channel
 from app.scrapers.comments import scrape_comments
+from app.scrapers.download import download_and_upload_to_r2
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("youtube-scraper")
@@ -250,6 +251,35 @@ async def comments(
         )
     except Exception as e:
         logger.exception("Comments error")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ---------------------------------------------------------------------------
+# Download & Push to Cloudflare R2
+# ---------------------------------------------------------------------------
+@app.get("/api/v1/youtube/download", tags=["YouTube"])
+@limiter.limit(f"{settings.rate_limit_per_minute}/minute")
+async def download(
+    request: Request,
+    video_id: str = Query(..., description="YouTube video ID"),
+    quality: Literal["best", "1080p", "720p", "480p", "audio_only"] = Query(
+        "best", description="Target video/audio quality"
+    ),
+):
+    """
+    Download a YouTube video (or audio) and push it directly to Cloudflare R2 storage.
+    Returns the permanent Cloudflare public CDN URL.
+    """
+    try:
+        return _cached_scrape(
+            "download",
+            {"video_id": video_id, "quality": quality},
+            download_and_upload_to_r2,
+            video_id=video_id,
+            quality=quality,
+        )
+    except Exception as e:
+        logger.exception("Download/Upload error")
         raise HTTPException(status_code=500, detail=str(e))
 
 

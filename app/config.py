@@ -19,6 +19,13 @@ class Settings(BaseSettings):
     # Mount this file as a volume in Docker/Coolify to avoid rebuilding on rotation.
     cookies_file: str = "/app/cookies/cookies.txt"
 
+    # Cloudflare R2 / S3 Storage Settings
+    r2_account_id: str = ""
+    r2_access_key_id: str = ""
+    r2_secret_access_key: str = ""
+    r2_bucket_name: str = ""
+    r2_public_domain: str = ""  # e.g. https://pub-xxx.r2.dev or https://media.yourdomain.com
+
     # Server
     port: int = 8000
     docs_enabled: bool = True

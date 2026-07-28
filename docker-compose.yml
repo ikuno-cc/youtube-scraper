@@ -13,6 +13,12 @@ services:
     environment:
       # ── Cookies ────────────────────────────────────────────────────────
       COOKIES_FILE: ${COOKIES_FILE:-/app/cookies/cookies.txt}
+      # ── Cloudflare R2 ──────────────────────────────────────────────────
+      R2_ACCOUNT_ID: ${R2_ACCOUNT_ID:-}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
+      R2_BUCKET_NAME: ${R2_BUCKET_NAME:-youtube-videos}
+      R2_PUBLIC_DOMAIN: ${R2_PUBLIC_DOMAIN:-}
       # ── Cache ──────────────────────────────────────────────────────────
       CACHE_TTL_SECONDS: ${CACHE_TTL_SECONDS:-300}
       CACHE_MAX_SIZE: ${CACHE_MAX_SIZE:-500}

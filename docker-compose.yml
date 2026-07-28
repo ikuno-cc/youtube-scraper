@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: youtube-scraper-api:latest
+    container_name: youtube-scraper-api
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8000}:8000"
+    environment:
+      # ── Cache ──────────────────────────────────────────────────────────
+      CACHE_TTL_SECONDS: ${CACHE_TTL_SECONDS:-300}
+      CACHE_MAX_SIZE: ${CACHE_MAX_SIZE:-500}
+      # ── Rate limiting ──────────────────────────────────────────────────
+      RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-30}
+      # ── Scraping ───────────────────────────────────────────────────────
+      MAX_RESULTS: ${MAX_RESULTS:-20}
+      YT_DLP_QUIET: ${YT_DLP_QUIET:-true}
+      # ── Server ─────────────────────────────────────────────────────────
+      PORT: ${PORT:-8000}
+      DOCS_ENABLED: ${DOCS_ENABLED:-true}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    # Optional: uncomment to persist yt-dlp cache across restarts
+    # volumes:
+    #   - yt_dlp_cache:/tmp/yt-dlp-cache
+
+# volumes:
+#   yt_dlp_cache:

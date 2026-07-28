@@ -3,17 +3,26 @@ from app.config import get_settings
 
 settings = get_settings()
 
-_YDL_OPTS = {
-    "quiet": settings.yt_dlp_quiet,
-    "no_warnings": True,
-    "skip_download": True,
-    "extract_flat": False,
-}
+
+def _get_opts(**extra) -> dict:
+    """Build yt-dlp options, injecting cookies if the file exists."""
+    opts = {
+        "quiet": settings.yt_dlp_quiet,
+        "no_warnings": True,
+        "skip_download": True,
+        "extract_flat": False,
+        "format": "all",
+        **extra,
+    }
+    cookies = settings.cookies_file_path
+    if cookies:
+        opts["cookiefile"] = str(cookies)
+    return opts
 
 
 def scrape_metadata(video_id: str) -> dict:
     url = f"https://www.youtube.com/watch?v={video_id}"
-    opts = {**_YDL_OPTS}
+    opts = _get_opts()
 
     with yt_dlp.YoutubeDL(opts) as ydl:
         info = ydl.extract_info(url, download=False)
@@ -28,21 +37,20 @@ def scrape_metadata(video_id: str) -> dict:
         if t.get("url")
     ]
 
-    # Build formats summary (only audio+video streams)
-    formats = [
-        {
-            "formatId": f.get("format_id"),
-            "ext": f.get("ext"),
-            "resolution": f.get("resolution"),
-            "fps": f.get("fps"),
-            "filesize": f.get("filesize"),
-            "tbr": f.get("tbr"),
-            "vcodec": f.get("vcodec"),
-            "acodec": f.get("acodec"),
-        }
-        for f in (info.get("formats") or [])
-        if f.get("vcodec") != "none" and f.get("acodec") != "none"
-    ]
+    # Build formats summary
+    formats = []
+    for f in (info.get("formats") or []):
+        if isinstance(f, dict):
+            formats.append({
+                "formatId": f.get("format_id"),
+                "ext": f.get("ext"),
+                "resolution": f.get("resolution"),
+                "fps": f.get("fps"),
+                "filesize": f.get("filesize"),
+                "tbr": f.get("tbr"),
+                "vcodec": f.get("vcodec"),
+                "acodec": f.get("acodec"),
+            })
 
     return {
         "videoId": info.get("id"),

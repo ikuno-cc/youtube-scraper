@@ -4,6 +4,21 @@ from app.config import get_settings
 settings = get_settings()
 
 
+def _get_opts(**extra) -> dict:
+    """Build yt-dlp options, injecting cookies if the file exists."""
+    opts = {
+        "quiet": settings.yt_dlp_quiet,
+        "no_warnings": True,
+        "skip_download": True,
+        "js_runtimes": {"node": {}},
+        **extra,
+    }
+    cookies = settings.cookies_file_path
+    if cookies:
+        opts["cookiefile"] = str(cookies)
+    return opts
+
+
 def scrape_subtitles(
     video_id: str,
     language: str = "en",
@@ -11,13 +26,10 @@ def scrape_subtitles(
 ) -> dict:
     url = f"https://www.youtube.com/watch?v={video_id}"
 
-    opts = {
-        "quiet": settings.yt_dlp_quiet,
-        "no_warnings": True,
-        "skip_download": True,
-        "writesubtitles": False,
-        "writeautomaticsub": False,
-    }
+    opts = _get_opts(
+        writesubtitles=False,
+        writeautomaticsub=False,
+    )
 
     with yt_dlp.YoutubeDL(opts) as ydl:
         info = ydl.extract_info(url, download=False)

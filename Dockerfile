@@ -19,11 +19,14 @@ LABEL org.opencontainers.image.title="YouTube Scraper API"
 LABEL org.opencontainers.image.description="Self-hosted YouTube scraper REST API"
 LABEL org.opencontainers.image.source="https://github.com/your-repo/youtube-scraper-api"
 
-# ffmpeg is required by yt-dlp for some format merging operations
+# ffmpeg, curl, unzip, and deno (required for yt-dlp JS runtime)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    unzip \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -fsSL https://deno.land/install.sh | sh \
+    && cp /root/.deno/bin/deno /usr/local/bin/deno
 
 # Copy installed packages from builder
 COPY --from=builder /install /usr/local
@@ -32,7 +35,9 @@ WORKDIR /app
 
 # Non-root user for security
 RUN groupadd --gid 1001 appgroup \
-    && useradd --uid 1001 --gid appgroup --no-create-home appuser
+    && useradd --uid 1001 --gid appgroup --no-create-home appuser \
+    && mkdir -p /app/cookies \
+    && chown -R appuser:appgroup /app
 
 COPY --chown=appuser:appgroup . .
 

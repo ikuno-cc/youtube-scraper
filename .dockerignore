@@ -1,3 +1,5 @@
+# Cookies are volume-mounted at runtime — never bake into the image
+cookies/
 .env
 __pycache__/
 *.pyc

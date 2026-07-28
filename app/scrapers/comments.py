@@ -4,22 +4,34 @@ from app.config import get_settings
 settings = get_settings()
 
 
-def scrape_comments(video_id: str, max_comments: int = 50) -> dict:
-    url = f"https://www.youtube.com/watch?v={video_id}"
-    max_comments = min(max_comments, 200)
-
+def _get_opts(**extra) -> dict:
+    """Build yt-dlp options, injecting cookies if the file exists."""
     opts = {
         "quiet": settings.yt_dlp_quiet,
         "no_warnings": True,
         "skip_download": True,
-        "getcomments": True,
-        "extractor_args": {
+        "js_runtimes": {"node": {}},
+        **extra,
+    }
+    cookies = settings.cookies_file_path
+    if cookies:
+        opts["cookiefile"] = str(cookies)
+    return opts
+
+
+def scrape_comments(video_id: str, max_comments: int = 50) -> dict:
+    url = f"https://www.youtube.com/watch?v={video_id}"
+    max_comments = min(max_comments, 200)
+
+    opts = _get_opts(
+        getcomments=True,
+        extractor_args={
             "youtube": {
                 "max_comments": [str(max_comments)],
                 "comment_sort": ["top"],
             }
         },
-    }
+    )
 
     with yt_dlp.YoutubeDL(opts) as ydl:
         info = ydl.extract_info(url, download=False)

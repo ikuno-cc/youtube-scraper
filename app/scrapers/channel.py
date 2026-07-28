@@ -4,6 +4,21 @@ from app.config import get_settings
 settings = get_settings()
 
 
+def _get_opts(**extra) -> dict:
+    """Build yt-dlp options, injecting cookies if the file exists."""
+    opts = {
+        "quiet": settings.yt_dlp_quiet,
+        "no_warnings": True,
+        "skip_download": True,
+        "js_runtimes": {"node": {}},
+        **extra,
+    }
+    cookies = settings.cookies_file_path
+    if cookies:
+        opts["cookiefile"] = str(cookies)
+    return opts
+
+
 def _channel_url(channel_id: str) -> str:
     if channel_id.startswith("@"):
         return f"https://www.youtube.com/{channel_id}"
@@ -16,13 +31,10 @@ def scrape_channel(channel_id: str, max_videos: int = 20) -> dict:
     url = _channel_url(channel_id)
     max_videos = min(max_videos, settings.max_results)
 
-    opts = {
-        "quiet": settings.yt_dlp_quiet,
-        "no_warnings": True,
-        "skip_download": True,
-        "extract_flat": True,  # Don't fetch each video's full info
-        "playlistend": max_videos,
-    }
+    opts = _get_opts(
+        extract_flat=True,
+        playlistend=max_videos,
+    )
 
     with yt_dlp.YoutubeDL(opts) as ydl:
         info = ydl.extract_info(url, download=False)

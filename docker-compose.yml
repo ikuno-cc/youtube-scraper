@@ -11,6 +11,8 @@ services:
     ports:
       - "${PORT:-8000}:8000"
     environment:
+      # ── Cookies ────────────────────────────────────────────────────────
+      COOKIES_FILE: ${COOKIES_FILE:-/app/cookies/cookies.txt}
       # ── Cache ──────────────────────────────────────────────────────────
       CACHE_TTL_SECONDS: ${CACHE_TTL_SECONDS:-300}
       CACHE_MAX_SIZE: ${CACHE_MAX_SIZE:-500}
@@ -29,6 +31,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 20s
+    volumes:
+      # Mount cookies file — update on host, no image rebuild needed
+      - ./cookies/cookies.txt:/app/cookies/cookies.txt:ro
     # Optional: uncomment to persist yt-dlp cache across restarts
     # volumes:
     #   - yt_dlp_cache:/tmp/yt-dlp-cache

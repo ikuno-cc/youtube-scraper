@@ -33,9 +33,18 @@ class Settings(BaseSettings):
 
     @property
     def cookies_file_path(self) -> Path | None:
-        """Return the cookies Path if the file exists, else None."""
-        p = Path(self.cookies_file)
-        return p if p.exists() and p.stat().st_size > 0 else None
+        """Return the cookies Path if the file exists and is non-empty, checking fallbacks."""
+        candidates = [
+            Path(self.cookies_file),
+            Path("/app/cookies/cookies.txt"),
+            Path("/app/cookies.txt"),
+            Path("cookies/cookies.txt"),
+            Path("cookies.txt"),
+        ]
+        for p in candidates:
+            if p.exists() and p.stat().st_size > 0:
+                return p
+        return None
 
     class Config:
         env_file = ".env"

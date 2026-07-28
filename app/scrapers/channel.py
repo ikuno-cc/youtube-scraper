@@ -10,7 +10,7 @@ def _get_opts(**extra) -> dict:
         "quiet": settings.yt_dlp_quiet,
         "no_warnings": True,
         "skip_download": True,
-        "js_runtimes": {"node": {}},
+        "format": "all",
         **extra,
     }
     cookies = settings.cookies_file_path
